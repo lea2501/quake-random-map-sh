@@ -50,7 +50,7 @@ fi
 echo $mapname
 
 # Run Quake
-#quakespasm -width 1920 -height 1080 -fullscreen -basedir $QUAKE_DIR -heapsize 256000 -zone 4096 -game $gamename +map $mapname +skill 1 +exec $QUAKE_DIR/id1/autoexec.cfg -fitz
+quakespasm -width 1920 -height 1080 -fullscreen -basedir $QUAKE_DIR -heapsize 256000 -zone 4096 -game $gamename +map $mapname +skill 1 +exec $QUAKE_DIR/id1/autoexec.cfg -fitz
 
 # Print map name and pak file
 if [[ ! -z $pakfile ]]; then
