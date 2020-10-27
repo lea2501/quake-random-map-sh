@@ -1,7 +1,18 @@
 #!/bin/sh
 
+### Configuration
+QUAKE_DIR=~/games/quake
+
+if [ -z "$1" ]
+then
+      QUAKE_SUB_DIR=*
+else
+      QUAKE_SUB_DIR=$1
+fi
+
+### Script
 get_map_file() {
-    mapfile=$(find ~/games/quake/*/{maps/*.bsp,pak0.pak} -type f | shuf -n 1)
+    mapfile=$(find $QUAKE_DIR/$QUAKE_SUB_DIR/{maps/*.bsp,pak0.pak} -type f | shuf -n 1)
 
     if [[ $mapfile == *"pak"* ]]; then
         pakfile=$mapfile
@@ -14,7 +25,7 @@ get_map_file() {
 ###
 get_map_file
 
-while [[ $mapfile == *"/b_"* || $mapfile == *"_obj_"* || $mapfile == *"_brk"* || $mapfile == *"/m_"* || $mapfile == *"bmodels"* ]]
+while [[ -z $mapfile || $mapfile == *"/b_"* || $mapfile == *"_obj_"* || $mapfile == *"_brk"* || $mapfile == *"/m_"* || $mapfile == *"bmodels"* ]]
 do
     echo "Incorrect map" $mapfile "getting another map..."
     unset pakfile
@@ -39,7 +50,7 @@ fi
 echo $mapname
 
 # Run Quake
-quakespasm -width 1920 -height 1080 -fullscreen -basedir ~/games/quake/ -heapsize 256000 -zone 4096 -game $gamename +map $mapname +skill 1 +exec ~/games/quake/id1/autoexec.cfg -fitz
+#quakespasm -width 1920 -height 1080 -fullscreen -basedir $QUAKE_DIR -heapsize 256000 -zone 4096 -game $gamename +map $mapname +skill 1 +exec $QUAKE_DIR/id1/autoexec.cfg -fitz
 
 # Print map name and pak file
 if [[ ! -z $pakfile ]]; then
