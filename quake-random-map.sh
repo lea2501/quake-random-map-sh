@@ -1,10 +1,16 @@
 #!/bin/sh
 
+# exit when any command fails
+set -e
+
 ### Configuration
 QUAKE_DIR=~/games/quake
-
-if [ -z "$1" ]
-then
+USAGE_MESSAGE="Usage: quake-random-map.sh <id1|ad|jam9|quoth|hipnotic|...>"
+if [[ $1 == "--help" || $1 == "-h" ]]; then
+    echo $USAGE_MESSAGE
+    exit 1
+fi
+if [[ -z $1 ]]; then
       QUAKE_SUB_DIR=*
 else
       QUAKE_SUB_DIR=$1
