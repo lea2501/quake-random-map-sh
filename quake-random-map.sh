@@ -5,7 +5,7 @@ set -e
 
 ### Configuration
 QUAKE_DIR=~/games/quake
-USAGE_MESSAGE="Usage: quake-random-map.sh <id1|ad|jam9|quoth|hipnotic|...>"
+USAGE_MESSAGE="Usage: Edit QUAKE_DIR value with your quake installation directory and run: quake-random-map.sh <id1|ad|jam9|quoth|hipnotic|...>(Optional)"
 if [[ $1 == "--help" || $1 == "-h" ]]; then
     echo $USAGE_MESSAGE
     exit 1
@@ -56,10 +56,12 @@ fi
 echo $mapname
 
 # Run Quake
-quakespasm -width 1920 -height 1080 -fullscreen -basedir $QUAKE_DIR -heapsize 256000 -zone 4096 -game $gamename +map $mapname +skill 1 +exec $QUAKE_DIR/id1/autoexec.cfg -fitz
+commandline="quakespasm -width 1920 -height 1080 -fullscreen -basedir $QUAKE_DIR -heapsize 256000 -zone 4096 -game $gamename +map $mapname +skill 1 +exec $QUAKE_DIR/id1/autoexec.cfg -fitz"
+$commandline
 
 # Print map name and pak file
 if [[ ! -z $pakfile ]]; then
-    echo $pakfile
+    echo "PAK file            : $pakfile"
 fi
-echo $mapfile
+echo "MAP file            : $mapfile"
+echo "Full command line   : $commandline"
