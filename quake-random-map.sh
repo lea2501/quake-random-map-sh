@@ -2,6 +2,8 @@
 
 # exit when any command fails
 set -e
+# debug log
+set -x
 
 ### Configuration
 QUAKE_DIR=~/games/quake
@@ -15,14 +17,25 @@ if [[ -z $1 ]]; then
 else
       QUAKE_SUB_DIR=$1
 fi
+mapfile=
+mapdir=
+scriptdir="$(pwd $(dirname $0))"
 
 ### Script
 get_map_file() {
     mapfile=$(find $QUAKE_DIR/$QUAKE_SUB_DIR/{maps/*.bsp,pak0.pak} -type f | shuf -n 1)
 
     if [[ $mapfile == *"pak"* ]]; then
+        # Get map directory name
+        mapdir="$(dirname "$mapfile")"
+        mapdir="$(awk -F/ '{print $(NF)}' <<< "${mapdir}")"
+        # Get map pak file map name
         pakfile=$mapfile
         mapfile=$(qpakman -l $pakfile | grep 'maps/' | grep '.bsp' | awk '{ print $5 }' | shuf -n 1)
+    else
+        # Get map directory name
+        mapdir="$(dirname "$mapfile")"
+        mapdir="$(awk -F/ '{print $(NF-1)}' <<< "${mapdir}")"
     fi
 }
 
@@ -38,6 +51,25 @@ do
     unset mapfile
     get_map_file
 done
+
+# Save map info in external file
+play_combination="${mapdir},${mapfile}"
+play_combination=$(sed 's/ /_/g' <<< "${play_combination}")
+
+# Check played times in external file
+if [ ! -z $(grep "${play_combination}" ${scriptdir}/already_played_maps.txt) ]; then 
+    echo "Play combination found in file, updating file"
+    current_times=$(cat ${scriptdir}/already_played_maps.txt | grep ${play_combination} | awk -F, '{print $4}')
+    played_times=$(echo "$(($current_times + 1))")
+
+    # Update file
+    sed -i "s|${play_combination},${current_times}|${play_combination},${played_times}|g" ${scriptdir}/already_played_maps.txt
+else
+    echo "Play combination not found in file, adding to file"
+    played_times="1"
+    new_played="${play_combination},${played_times}"
+    echo "${new_played}" >> ${scriptdir}/already_played_maps.txt
+fi
 
 # Get game name
 if [[ ! -z $pakfile ]]; then
