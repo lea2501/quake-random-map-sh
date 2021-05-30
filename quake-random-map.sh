@@ -3,23 +3,62 @@
 # exit when any command fails
 set -e
 # debug log
-set -x
+#set -x
+
+function show_usage (){
+    printf "Usage: $0 [options [parameters]]\n"
+    printf "\n"
+    printf "Options:\n"
+    printf " -d|--mod_dir   [id1|ad|jam9|quoth|hipnotic|...] (Optional)\n"
+    printf " -u|--mangohud  [yes|no]\n"
+    printf " -h|--help, Print help\n"
+
+exit
+}
+
+if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]];then
+    show_usage
+fi
+
+while [ ! -z "$1" ]; do
+  case "$1" in
+     --mod_dir|-d)
+         shift
+         echo "mod directory: $1"
+         QUAKE_SUB_DIR=$1
+         ;;
+     --mangohud|-u)
+        shift
+        echo "mangohud: $1"
+        MANGOHUD_ENABLED=$1
+         ;;
+     *)
+        show_usage
+        ;;
+  esac
+shift
+done
 
 ### Configuration
 QUAKE_DIR=~/games/quake
-USAGE_MESSAGE="Usage: Edit QUAKE_DIR value with your quake installation directory and run: quake-random-map.sh <id1|ad|jam9|quoth|hipnotic|...>(Optional)"
-if [[ $1 == "--help" || $1 == "-h" ]]; then
-    echo $USAGE_MESSAGE
-    exit 1
-fi
-if [[ -z $1 ]]; then
+SCRIPT_DIR="$(pwd $(dirname $0))"
+if [[ -z $QUAKE_SUB_DIR ]]; then
       QUAKE_SUB_DIR=*
-else
-      QUAKE_SUB_DIR=$1
 fi
-mapfile=
+if [[ -z $MANGOHUD_ENABLED ]]; then
+      MANGOHUD_ENABLED=no
+fi
 mapdir=
 scriptdir="$(pwd $(dirname $0))"
+
+### check parameter values
+mangohud_enabled=(yes no)
+if [[ " "${mangohud_enabled[@]}" " != *" $MANGOHUD_ENABLED "* ]]; then
+    echo "$MANGOHUD_ENABLED: not recognized. Valid mangohud options are:"
+    echo "${mangohud_enabled[@]/%/,}"
+    exit 1
+fi
+
 
 ### Script
 get_map_file() {
@@ -53,22 +92,26 @@ do
 done
 
 # Save map info in external file
-play_combination="${mapdir},${mapfile}"
+if [[ ! -z $pakfile ]]; then
+    play_combination="${pakfile},${mapdir},${mapfile}"
+else
+    play_combination="${mapdir},${mapfile}"
+fi
 play_combination=$(sed 's/ /_/g' <<< "${play_combination}")
 
 # Check played times in external file
-if [ ! -z $(grep "${play_combination}" ${scriptdir}/already_played_maps.txt) ]; then 
+if [ ! -z $(grep "${play_combination}" ${SCRIPT_DIR}/already_played_maps.txt) ]; then 
     echo "Play combination found in file, updating file"
-    current_times=$(cat ${scriptdir}/already_played_maps.txt | grep ${play_combination} | awk -F, '{print $4}')
+    current_times=$(cat ${SCRIPT_DIR}/already_played_maps.txt | grep ${play_combination} | awk -F, '{print $4}')
     played_times=$(echo "$(($current_times + 1))")
 
     # Update file
-    sed -i "s|${play_combination},${current_times}|${play_combination},${played_times}|g" ${scriptdir}/already_played_maps.txt
+    sed -i "s|${play_combination},${current_times}|${play_combination},${played_times}|g" ${SCRIPT_DIR}/already_played_maps.txt
 else
     echo "Play combination not found in file, adding to file"
     played_times="1"
     new_played="${play_combination},${played_times}"
-    echo "${new_played}" >> ${scriptdir}/already_played_maps.txt
+    echo "${new_played}" >> ${SCRIPT_DIR}/already_played_maps.txt
 fi
 
 # Get game name
@@ -87,9 +130,19 @@ else
 fi
 echo $mapname
 
-# Run Quake
+if [[ $MANGOHUD_ENABLED == "yes" ]]; then
+    export MANGOHUD_DLSYM=1
+    #export MANGOHUD_CONFIG=cpu_temp,gpu_temp,core_load,cpu_core_clock,gpu_mem_clock,cpu_power,gpu_power,cpu_mhz,ram,vram,frametime,position=top-left,height=500,font_size=24
+    export MANGOHUD_CONFIG=cpu_temp,gpu_temp,cpu_core_clock,gpu_mem_clock,cpu_power,gpu_power,cpu_mhz,ram,vram,frametime,position=top-left,height=500,font_size=18
+fi
+
+# Run
 commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill 1 +exec $QUAKE_DIR/id1/autoexec.cfg -fitz"
-$commandline
+if [[ $MANGOHUD_ENABLED == "yes" ]]; then
+    mangohud $commandline || true
+else
+    $commandline || true
+fi
 
 # Print map name and pak file
 if [[ ! -z $pakfile ]]; then
@@ -97,3 +150,6 @@ if [[ ! -z $pakfile ]]; then
 fi
 echo "MAP file            : $mapfile"
 echo "Full command line   : $commandline"
+echo ""
+echo "map: ${play_combination}"
+echo "map played ${played_times} times"
