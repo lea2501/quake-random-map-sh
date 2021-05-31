@@ -9,8 +9,9 @@ function show_usage (){
     printf "Usage: $0 [options [parameters]]\n"
     printf "\n"
     printf "Options:\n"
-    printf " -d|--mod_dir   [id1|ad|jam9|quoth|hipnotic|...] (Optional)\n"
-    printf " -u|--mangohud  [yes|no]\n"
+    printf " -g|--game-dir   [/path/to/quake/base/directory] (Optional, default: '~/games/quake')\n"
+    printf " -d|--mod-dir    [id1|ad|jam9|quoth|hipnotic|...] (Optional, default: '*' (all subdirectories))\n"
+    printf " -u|--mangohud   [yes|no]\n"
     printf " -h|--help, Print help\n"
 
 exit
@@ -22,7 +23,12 @@ fi
 
 while [ ! -z "$1" ]; do
   case "$1" in
-     --mod_dir|-d)
+     --game-dir|-g)
+         shift
+         echo "mod directory: $1"
+         QUAKE_SUB_DIR=$1
+         ;;
+     --mod-dir|-d)
          shift
          echo "mod directory: $1"
          QUAKE_SUB_DIR=$1
@@ -40,7 +46,9 @@ shift
 done
 
 ### Configuration
-QUAKE_DIR=~/games/quake
+if [[ -z $QUAKE_DIR ]]; then
+      QUAKE_DIR=~/games/quake
+fi
 SCRIPT_DIR="$(pwd $(dirname $0))"
 if [[ -z $QUAKE_SUB_DIR ]]; then
       QUAKE_SUB_DIR=*

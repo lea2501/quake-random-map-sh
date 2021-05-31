@@ -4,11 +4,22 @@ This is a random quake map launcher script i made for myself, tired of having to
 
 If the file is a PAK file, it searches its contents for maps using the qpakman tool https://github.com/bunder/qpakman
 
-It launches the random map using quakespasm installed system wide already in your PATH, but you can change the script to run with any source port, i choosed quakespasm because it can play any existing map almost always.
+It launches the random map using quakespasm installed system wide already in your PATH, but you can change the script to run with any source port, i choosed quakespasm because it can play any existing map always.
 
 Dependencies:
-
+```
 quakespasm: https://quakespasm.sourceforge.net/
 qpakman: https://github.com/bunder/qpakman
+```
 
-Usage: Edit QUAKE_DIR value with your quake installation directory and run: quake-random-map.sh <id1|ad|jam9|quoth|hipnotic|...>(Optional)
+Usage:
+```
+$ ./quake-random-map.sh -h
+Usage: ./quake-random-map.sh [options [parameters]]
+
+Options:
+ -g|--game-dir   [/path/to/quake/base/directory] (Optional, default: '~/games/quake')
+ -d|--mod-dir    [id1|ad|jam9|quoth|hipnotic|...] (Optional, default: '*' (all subdirectories))
+ -u|--mangohud   [yes|no]
+ -h|--help, Print help
+```
