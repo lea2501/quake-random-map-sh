@@ -11,6 +11,7 @@ function show_usage (){
     printf "Options:\n"
     printf " -g|--game-dir   [/path/to/quake/base/directory] (Optional, default: '~/games/quake')\n"
     printf " -d|--mod-dir    [id1|ad|jam9|quoth|hipnotic|...] (Optional, default: '*' (all subdirectories))\n"
+    printf " -s|--skill      [0, 1, 2, 3] (Optional, default: '1')\n"
     printf " -u|--mangohud   [yes|no] (Optional, default: 'no'\n"
     printf " -h|--help, Print help\n"
 
@@ -32,6 +33,11 @@ while [ ! -z "$1" ]; do
          shift
          echo "mod directory: $1"
          QUAKE_SUB_DIR=$1
+         ;;
+     --skill|-s)
+         shift
+         echo "skill: $1"
+         SKILL=$1
          ;;
      --mangohud|-u)
         shift
@@ -56,6 +62,9 @@ fi
 if [[ -z $MANGOHUD_ENABLED ]]; then
       MANGOHUD_ENABLED=no
 fi
+if [[ -z $SKILL ]]; then
+      SKILL=1
+fi
 mapdir=
 scriptdir="$(pwd $(dirname $0))"
 
@@ -64,6 +73,12 @@ mangohud_enabled=(yes no)
 if [[ " "${mangohud_enabled[@]}" " != *" $MANGOHUD_ENABLED "* ]]; then
     echo "$MANGOHUD_ENABLED: not recognized. Valid mangohud options are:"
     echo "${mangohud_enabled[@]/%/,}"
+    exit 1
+fi
+skill=(0 1 2 3)
+if [[ " "${skill[@]}" " != *" $SKILL "* ]]; then
+    echo "$SKILL: not recognized. Valid skills are:"
+    echo "${skill[@]/%/,}"
     exit 1
 fi
 
@@ -145,7 +160,7 @@ if [[ $MANGOHUD_ENABLED == "yes" ]]; then
 fi
 
 # Run
-commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill 1 -fitz"
+commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL -fitz"
 if [[ $MANGOHUD_ENABLED == "yes" ]]; then
     mangohud $commandline || true
 else
@@ -157,6 +172,7 @@ if [[ ! -z $pakfile ]]; then
     echo "PAK file            : $pakfile"
 fi
 echo "MAP file            : $mapfile"
+echo "Skill:              : $skill"
 echo "Full command line   : $commandline"
 echo ""
 echo "map: ${play_combination}"
