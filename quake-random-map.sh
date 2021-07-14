@@ -26,7 +26,7 @@ while [ ! -z "$1" ]; do
   case "$1" in
      --game-dir|-g)
          shift
-         echo "mod directory: $1"
+         echo "game directory: $1"
          QUAKE_SUB_DIR=$1
          ;;
      --mod-dir|-d)
@@ -85,6 +85,11 @@ fi
 
 ### Script
 get_map_file() {
+    if [ ! -d $QUAKE_DIR/$QUAKE_SUB_DIR ]; then
+        echo "Mod directory does not exist"
+        exit 1
+    fi
+
     mapfile=$(find $QUAKE_DIR/$QUAKE_SUB_DIR/{maps/*.bsp,pak0.pak} -type f | shuf -n 1)
 
     if [[ $mapfile == *"pak"* ]]; then
