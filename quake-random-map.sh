@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # exit when any command fails
 set -e
@@ -12,7 +12,8 @@ function show_usage (){
     printf " -g|--game-dir   [/path/to/quake/base/directory] (Optional, default: '~/games/quake')\n"
     printf " -d|--mod-dir    [id1|ad|jam9|quoth|hipnotic|...] (Optional, default: '*' (all subdirectories))\n"
     printf " -s|--skill      [0, 1, 2, 3] (Optional, default: '1')\n"
-    printf " -u|--mangohud   [yes|no] (Optional, default: 'no'\n"
+    printf " -r|--retrolook  [yes|no] (Optional, default: 'no')\n"
+    printf " -u|--mangohud   [yes|no] (Optional, default: 'no')\n"
     printf " -h|--help, Print help\n"
 
 exit
@@ -25,20 +26,25 @@ fi
 while [ ! -z "$1" ]; do
   case "$1" in
      --game-dir|-g)
-         shift
-         echo "game directory: $1"
-         QUAKE_SUB_DIR=$1
-         ;;
+        shift
+        echo "game directory: $1"
+        QUAKE_SUB_DIR=$1
+        ;;
      --mod-dir|-d)
-         shift
-         echo "mod directory: $1"
-         QUAKE_SUB_DIR=$1
-         ;;
+        shift
+        echo "mod directory: $1"
+        QUAKE_SUB_DIR=$1
+        ;;
      --skill|-s)
-         shift
-         echo "skill: $1"
-         SKILL=$1
-         ;;
+        shift
+        echo "skill: $1"
+        SKILL=$1
+        ;;
+     --retrolook|-r)
+        shift
+        echo "retro look: $1"
+        RETRO_LOOK=$1
+        ;;
      --mangohud|-u)
         shift
         echo "mangohud: $1"
@@ -59,11 +65,14 @@ SCRIPT_DIR="$(pwd $(dirname $0))"
 if [[ -z $QUAKE_SUB_DIR ]]; then
       QUAKE_SUB_DIR=*
 fi
-if [[ -z $MANGOHUD_ENABLED ]]; then
-      MANGOHUD_ENABLED=no
-fi
 if [[ -z $SKILL ]]; then
       SKILL=1
+fi
+if [[ -z $RETRO_LOOK ]]; then
+      RETRO_LOOK=no
+fi
+if [[ -z $MANGOHUD_ENABLED ]]; then
+      MANGOHUD_ENABLED=no
 fi
 mapdir=
 scriptdir="$(pwd $(dirname $0))"
@@ -71,13 +80,19 @@ scriptdir="$(pwd $(dirname $0))"
 ### check parameter values
 mangohud_enabled=(yes no)
 if [[ " "${mangohud_enabled[@]}" " != *" $MANGOHUD_ENABLED "* ]]; then
-    echo "$MANGOHUD_ENABLED: not recognized. Valid mangohud options are:"
+    echo "$MANGOHUD_ENABLED: not recognized. Valid options are:"
     echo "${mangohud_enabled[@]/%/,}"
+    exit 1
+fi
+retro_look=(yes no)
+if [[ " "${retro_look[@]}" " != *" $RETRO_LOOK "* ]]; then
+    echo "$RETRO_LOOK: not recognized. Valid options are:"
+    echo "${retro_look[@]/%/,}"
     exit 1
 fi
 skill=(0 1 2 3)
 if [[ " "${skill[@]}" " != *" $SKILL "* ]]; then
-    echo "$SKILL: not recognized. Valid skills are:"
+    echo "$SKILL: not recognized. Valid options are:"
     echo "${skill[@]/%/,}"
     exit 1
 fi
@@ -98,7 +113,7 @@ get_map_file() {
         mapdir="$(awk -F/ '{print $(NF)}' <<< "${mapdir}")"
         # Get map pak file map name
         pakfile=$mapfile
-        mapfile=$(qpakman -l $pakfile | grep 'maps/' | grep '.bsp' | awk '{ print $5 }' | shuf -n 1)
+        mapfile=$(qpakman -l "$pakfile" | grep 'maps/' | grep '.bsp' | awk '{ print $5 }' | shuf -n 1)
     else
         # Get map directory name
         mapdir="$(dirname "$mapfile")"
@@ -120,7 +135,7 @@ do
 done
 
 # Save map info in external file
-if [[ ! -z $pakfile ]]; then
+if [ -n "$pakfile" ]; then
     play_combination="${pakfile},${mapdir},${mapfile}"
 else
     play_combination="${mapdir},${mapfile}"
@@ -128,7 +143,7 @@ fi
 play_combination=$(sed 's/ /_/g' <<< "${play_combination}")
 
 # Check played times in external file
-if [ ! -z $(grep "${play_combination}" ${SCRIPT_DIR}/already_played_maps.txt) ]; then 
+if [ ! -z $(grep "${play_combination}" ${SCRIPT_DIR}/already_played_maps.txt) ]; then
     echo "Play combination found in file, updating file"
     current_times=$(cat ${SCRIPT_DIR}/already_played_maps.txt | grep ${play_combination} | awk -F, '{print $4}')
     played_times=$(echo "$(($current_times + 1))")
@@ -143,37 +158,41 @@ else
 fi
 
 # Get game name
-if [[ ! -z $pakfile ]]; then
+if [ -n "$pakfile" ]; then
     gamename=$(awk -F/ '{print $6}' <<< "${pakfile}")
 else
     gamename=$(awk -F/ '{print $6}' <<< "${mapfile}")
 fi
-echo $gamename
+echo "$gamename"
 
 # get map name
-if [[ ! -z $pakfile ]]; then
+if [ -n "$pakfile" ]; then
     mapname=$(basename -- "${mapfile%.*}")
 else
     mapname=$(basename -- "${mapfile%.*}")
 fi
-echo $mapname
+echo "$mapname"
 
-if [[ $MANGOHUD_ENABLED == "yes" ]]; then
+if [ $MANGOHUD_ENABLED = "yes" ]; then
     export MANGOHUD_DLSYM=1
     #export MANGOHUD_CONFIG=cpu_temp,gpu_temp,core_load,cpu_core_clock,gpu_mem_clock,cpu_power,gpu_power,cpu_mhz,ram,vram,frametime,position=top-left,height=500,font_size=24
     export MANGOHUD_CONFIG=cpu_temp,gpu_temp,cpu_core_clock,gpu_mem_clock,cpu_power,gpu_power,cpu_mhz,ram,vram,frametime,position=top-left,height=500,font_size=18
 fi
 
 # Run
-commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL -fitz"
-if [[ $MANGOHUD_ENABLED == "yes" ]]; then
+if [ $RETRO_LOOK = "yes" ]; then
+  commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL +r_particles 2 +r_lerpmodels 0 +r_lerpmove 0 +r_viewmodel_quake 1 +r_scale 3 +scr_ofsx -2.8 +scr_sbaralpha 1 +v_gunkick 2 +gamma 1.2 +contrast 1.5 +fov 85 +fog 0.02"
+else
+  commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL -fitz"
+fi
+if [ $MANGOHUD_ENABLED = "yes" ]; then
     mangohud $commandline || true
 else
     $commandline || true
 fi
 
 # Print map name and pak file
-if [[ ! -z $pakfile ]]; then
+if [ -n $pakfile ]; then
     echo "PAK file            : $pakfile"
 fi
 echo "MAP file            : $mapfile"
