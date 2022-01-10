@@ -1,12 +1,12 @@
-#!/bin/bash
+#!/bin/ksh
 
 # exit when any command fails
 set -e
 # debug log
 #set -x
 
-function show_usage (){
-    printf "Usage: $0 [options [parameters]]\n"
+function show_usage {
+    printf "Usage: %s [options [parameters]]\n" "$0"
     printf "\n"
     printf "Options:\n"
     printf " -g|--game-dir   [/path/to/quake/base/directory] (Optional, default: '~/games/quake')\n"
@@ -23,7 +23,7 @@ if [[ "$1" == "--help" ]] || [[ "$1" == "-h" ]];then
     show_usage
 fi
 
-while [ ! -z "$1" ]; do
+while [ -n "$1" ]; do
   case "$1" in
      --game-dir|-g)
         shift
@@ -100,12 +100,12 @@ fi
 
 ### Script
 get_map_file() {
-    if [ ! -d $QUAKE_DIR/$QUAKE_SUB_DIR ]; then
+    if [ ! -d $QUAKE_DIR/"$QUAKE_SUB_DIR" ]; then
         echo "Mod directory does not exist"
         exit 1
     fi
 
-    mapfile=$(find $QUAKE_DIR/$QUAKE_SUB_DIR/{maps/*.bsp,pak0.pak} -type f | shuf -n 1)
+    mapfile=$(find $QUAKE_DIR/"$QUAKE_SUB_DIR"/{maps/*.bsp,pak0.pak} -type f | shuf -n 1)
 
     if [[ $mapfile == *"pak"* ]]; then
         # Get map directory name
@@ -192,7 +192,7 @@ else
 fi
 
 # Print map name and pak file
-if [ -n "$pakfile" ]; then
+if [ -n $pakfile ]; then
     echo "PAK file            : $pakfile"
 fi
 echo "MAP file            : $mapfile"
