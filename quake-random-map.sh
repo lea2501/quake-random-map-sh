@@ -61,7 +61,6 @@ done
 if [[ -z $QUAKE_DIR ]]; then
       QUAKE_DIR=~/games/quake
 fi
-SCRIPT_DIR="$(pwd $(dirname "$0"))"
 if [[ -z $QUAKE_SUB_DIR ]]; then
       QUAKE_SUB_DIR=*
 fi
@@ -75,7 +74,7 @@ if [[ -z $MANGOHUD_ENABLED ]]; then
       MANGOHUD_ENABLED=no
 fi
 mapdir=
-scriptdir="$(pwd $(dirname "$0"))"
+SCRIPT_DIR="$(pwd "$(dirname "$0")")"
 
 ### check parameter values
 mangohud_enabled=(yes no)
@@ -149,7 +148,7 @@ if [ ! -z $(grep "${play_combination}" ${SCRIPT_DIR}/already_played_maps.txt) ];
     played_times=$(echo "$(($current_times + 1))")
 
     # Update file
-    sed -i "s|${play_combination},${current_times}|${play_combination},${played_times}|g" ${SCRIPT_DIR}/already_played_maps.txt
+    sed -i "s|${play_combination},${current_times}|${play_combination},${played_times}|g" "${SCRIPT_DIR}"/already_played_maps.txt
 else
     echo "Play combination not found in file, adding to file"
     played_times="1"
@@ -185,14 +184,14 @@ if [ $RETRO_LOOK = "yes" ]; then
 else
   PARAMS=""
 fi
-if [ -f "~/src/quakespasm-quakespasm/Quake/quakespasm" ]; then
+if [ -f "$HOME/src/quakespasm-quakespasm/Quake/quakespasm" ]; then
   BINARY_PATH=~/src/quakespasm-quakespasm/Quake/quakespasm
 else
   BINARY_PATH=quakespasm
 fi
-commandline="${BINARY_PATH -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL $PARAMS -fitz"
+commandline="$BINARY_PATH -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL $PARAMS -fitz"
 if [ $MANGOHUD_ENABLED = "yes" ]; then
-    mangohud $commandline || true
+    mangohud "$commandline" || true
 else
     $commandline || true
 fi
@@ -202,7 +201,7 @@ if [ -n "$pakfile" ]; then
     echo "PAK file            : $pakfile"
 fi
 echo "MAP file            : $mapfile"
-echo "Skill:              : $skill"
+echo "Skill:              : $SKILL"
 echo "Full command line   : $commandline"
 echo ""
 echo "map: ${play_combination}"
