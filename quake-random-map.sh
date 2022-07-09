@@ -181,10 +181,16 @@ fi
 
 # Run
 if [ $RETRO_LOOK = "yes" ]; then
-  commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL +r_particles 2 +r_lerpmodels 0 +r_lerpmove 0 +r_viewmodel_quake 1 +r_scale 4 +scr_ofsx -2.8 +scr_sbaralpha 1 +v_gunkick 2 +gamma 1.2 +contrast 1.5 +fov 85 +fog 0.02"
+  PARAMS="+r_particles 2 +r_lerpmodels 0 +r_lerpmove 0 +r_viewmodel_quake 1 +r_scale 4 +scr_ofsx -2.8 +scr_sbaralpha 1 +v_gunkick 2 +gamma 1.2 +contrast 1.5 +fov 85 +fog 0.02"
 else
-  commandline="quakespasm -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL -fitz"
+  PARAMS=""
 fi
+if [ -f "~/src/quakespasm-quakespasm/Quake/quakespasm" ]; then
+  BINARY_PATH=~/src/quakespasm-quakespasm/Quake/quakespasm
+else
+  BINARY_PATH=quakespasm
+fi
+commandline="${BINARY_PATH -current -basedir $QUAKE_DIR -heapsize 524288 -zone 4096 -game $gamename +map $mapname +skill $SKILL $PARAMS -fitz"
 if [ $MANGOHUD_ENABLED = "yes" ]; then
     mangohud $commandline || true
 else
