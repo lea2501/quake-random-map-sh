@@ -1,3 +1,6 @@
+!!! DEVELOPMENT MOVED TO https://notabug.org/lea2501/doom-random-map-sh !!!
+
+
 # quake-random-map-sh
 
 This is a random quake map launcher script i made for myself, tired of having to remember which maps i already played and what progress i made in them, and enjoying to make temporary slige maps to play and enjoy, i came with this idea to have a script, that get a random map to play, either be them PAK files or bsp maps in the quake subdirectories.
